@@ -1,8 +1,11 @@
 body {
-    color: darkblue;
+    color: cadetblue;
+    margin: 5px;
 }
 button {
     font-family: 'Courier New', Courier, monospace;
     color: white;
     background-color:cadetblue;
+    padding: 10px;
+    margin: 10px;
 }
