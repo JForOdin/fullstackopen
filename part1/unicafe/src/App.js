@@ -35,11 +35,11 @@ const Statistics = (props) => {
   }
   return (
     <div>
-      No Feedback Given
+      <h3>No Feedback Given</h3>
     </div>
   )
 }
-const VoteStatistics = (props) => {
+const AdditionalStats = (props) => {
   if(props.totalVotes>0)
   {
     return (
@@ -56,9 +56,7 @@ const VoteStatistics = (props) => {
       </div>
     )
   }
-  return (
-    <div></div>
-  )
+  
 } 
 function App() { 
   const [good, setGood] = useState(0);
@@ -96,7 +94,7 @@ function App() {
         <Button handleClick={() => clickNeutral(neutral+1)} text="neutral"/>
         <Button handleClick={() => clickBad(bad+1)} text="bad"/>
         <Statistics good={good} neutral = {neutral} bad = {bad} totalVotes={totalVotes}/>
-        <VoteStatistics totalVotes = {totalVotes} score = {score} positiveScore={positiveScore}/>
+        <AdditionalStats totalVotes = {totalVotes} score = {score} positiveScore={positiveScore}/>
     </div>
   );
 }
