@@ -28,6 +28,7 @@ const App = () => {
         }
       ]
     },
+    
     {
       name: 'Node.js',
       id: 2,
@@ -44,6 +45,7 @@ const App = () => {
         }
       ]
     }
+    
   ]; 
  
 //  console.log("TYPE OF :"+typeof(course));
