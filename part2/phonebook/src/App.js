@@ -1,10 +1,10 @@
 import './App.css';
-import { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react';
 import ShowPersons from './components/ShowPersons';
 import SearchForContact from './components/SearchForContact';
 import AddNewContact from './components/AddNewContact.js';
 import contactService from './services/contactService';
-
+import Notification from './components/Notification';
 
 const returnLowerCase = (word) => {
   return word.toLowerCase();
@@ -15,7 +15,8 @@ function App() {
   const [newNumber, setNewNumber] = useState('');
   const [showAll, setShowAll] = useState(true);
   const [searchForName, setSearchForName] = useState('');
-  
+  const [notificationMessage, setNotificationMessage] = useState(null)
+
 
   const hook = () => {
     contactService
@@ -35,7 +36,17 @@ function App() {
     for(let i = 0; i < persons.length; i++)
     {
       if(returnLowerCase(persons[i].name) === returnLowerCase(newContact))
-        return window.alert(`${newContact} is already in the phonebook.`);
+      {
+        if(window.confirm(`Contact ${newContact} is already in the phonebook. Do you want to replace contact's number with a new one?`))
+        {
+          persons[i].number = newNumber;
+          setNotificationMessage(`${newContact} number changed`)
+          setTimeout(() => {
+          setNotificationMessage(null)
+          }, 5000); 
+          return;
+        }
+      }
     }
       
     const contactObject = {
@@ -50,10 +61,18 @@ function App() {
       setPersons(persons.concat(contactObject));
       setNewNumber('');
       setNewContact('');
-    
+      setNotificationMessage(`${newContact} has been added to contact list`)
+      setTimeout(() => {
+        setNotificationMessage(null)
+      }, 5000);
     })
     .catch(error => {
-      console.log('failed at creating object')
+      setNotificationMessage(
+        `Note '${error}' was already removed from server`
+      )
+      setTimeout(() => {
+        setNotificationMessage(null)
+      }, 5000)
     });
     
   }
@@ -78,6 +97,8 @@ function App() {
     <div className = "main">
       <div className ="ui-container">
         <h2>Phonebook</h2>
+        <Notification message={notificationMessage} />
+
         <SearchForContact searchForName={searchForName} handleSearchContactChange={handleSearchContactChange} findContact = {findContact} />
         <AddNewContact addContact = {addContact} newContact={newContact} handleContactChange={handleContactChange} handleNumberChange={handleNumberChange} />
       </div>

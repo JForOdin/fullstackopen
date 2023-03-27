@@ -41,6 +41,12 @@ button {
   border-right: 2px solid darkblue;
 
 }
-.data-container {
-
+.notification {
+  color: darkblue;
+  background: lightgrey;
+  font-size: 20px;
+  border-style: solid;
+  border-radius: 5px;
+  padding: 10px;
+  margin-bottom: 10px;
 }
