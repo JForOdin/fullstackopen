@@ -1,4 +1,3 @@
-import { useState } from 'react';
 
 const SearchForContact = ({searchForName, handleSearchContactChange,findContact}) => {
     
