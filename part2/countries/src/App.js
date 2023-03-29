@@ -2,16 +2,15 @@ import './App.css';
 import CountriesService from './services/countriesService';
 import {useState,useEffect} from 'react';
 
-const findCountries = (event) => {
- // event.preventDefault();  
- //setSearchForCountry(event)
-  console.log("Find countries ",event)
-}
-
 function App() {
   const [countries,setCountries] = useState([]);
   var countryDetailsArray = [];
   const [searchForCountry, setSearchForCountry] = useState('');
+  const findCountries = (event) => {
+     event.preventDefault();  
+     setSearchForCountry(event.target[0].value)
+   //  console.log("Find countries ",event.target[0].value)
+   }
   const FindCountriesForm = ({handleSearchForChange,searchForCountry}) => {
     return (
       <div className="form-div">
