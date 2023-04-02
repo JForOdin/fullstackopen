@@ -1,172 +1,186 @@
 import './App.css';
 import CountriesService from './services/countriesService';
 import {useState,useEffect} from 'react';
+import FindCountriesForm from './components/FindCountryForm';
+import weatherService from './services/weatherService';
+import FlagImage from './components/FlagImage';
+import WeatherIcon from './components/WeatherIcon';
+import Languages from './components/Languages';
+
 
 function App() {
+
   const [countries,setCountries] = useState([]);
-  var countryDetailsArray = [];
   const [searchForCountry, setSearchForCountry] = useState('');
-  const findCountries = (event) => {
-     event.preventDefault();  
-     setSearchForCountry(event.target[0].value)
-   //  console.log("Find countries ",event.target[0].value)
-   }
-  const FindCountriesForm = ({handleSearchForChange,searchForCountry}) => {
-    return (
-      <div className="form-div">
-        <form onSubmit={findCountries}>
-          <div className="country-name">Search for: <input autoFocus="autoFocus" value ={searchForCountry} onChange={handleSearchForChange} /></div>
-          <button type="submit">find countries</button>
-        </form>
-      </div>
-    )
+  const [loadedCountries,setLoadedCountries] = useState(false);
+  const [blook,setBlook] = useState('');
+  const [temperatures,setTemperatures] = useState([]);
+  const clearCountries = () => {
+    setSearchForCountry('');
+  }
+  const handleSearchForChange = (event) => {
+    setSearchForCountry(event.target.value);
+  }
+  const addShowDetails = (countriesResponse) => {
+    let id = 0;
+    for(let country of countriesResponse)
+    {
+      country.showDetails = false;
+      country.id = id;
+      id++;
+    }
   }
 
-  const Languages = (languages) => {
-    let langArray = Object.values(languages.languages);
+  const getCapitalFromID = (id) => {
+    let result = countries.filter((country) => country.id === Number(id));
+    return result[0].capital;
+  }
+
+  const toggleDetails = (id,searchForCountry) => {
+    let currentCountryID = id.id;
+    for(let country of countries)
+    {
+      if(country.id === currentCountryID)
+      {
+        if(country.showDetails === false)
+        {
+          setSearchForCountry(searchForCountry);
+          setBlook(Math.random());
+          return country.showDetails = true;
+        }
+        country.showDetails = false;
+        setSearchForCountry(searchForCountry);
+        setBlook(Math.random());
+      }
+    }
+  }
+  const ToggleDetailsButton = ({id,searchForCountry,text}) => {
     return (
-      <div>
-          Languages:
-        {langArray.map((language)=><div key ={language}> {language}</div>)}
-      </div>
+      <>
+        <button onClick={()=>toggleDetails({id},searchForCountry)} id = {id} >{text}</button>
+      </>
     )
   }
-  const ShowDetails = (country) => {
-    let languages = country.country.languages;
-    let flag = country.country.flag;
-    
-    if(country.country.showDetails==="true")
+  const haveWeatherInfo = (id) => {
+    //console.log("checking id "+id)
+    for(let temp of temperatures)
     {
-      return (
-      <div className="country-stats">
+      if(id === temp.id)
+      {
+        return true;
+      }
+    } 
+  }
+  const retrieveWeather = (country) => {
+   //console.log("retrieve weather service",country)
+
+      if(!haveWeatherInfo(country.id))
+      {
+          weatherService
+                .getCurrentWeather(getCapitalFromID(country.id))
+                .then(response => {
+                  let regionWeather = {"id": country.id,"temp":response.temp,"icon":response.icon}
+                  setTemperatures(temperatures.concat(regionWeather));
+                  country.temp = response.temp;
+                  country.icon = "http:"+response.icon;
+                  //console.log("icon "+country.icon)
+             /*   let regionWeather = {"id":country.id,"temp":response};
+                setTemperatures(temperatures.concat(regionWeather));
+                country.temp = response;*/
+              })
+      }
+  }
+  const ListOfCountries = (countries) => {
+    let listCountries = countries.countries.filter((country) => country.name.common.startsWith(countries.searchForCountry) || country.name.common.toLowerCase().startsWith(countries.searchForCountry))    
+    if(listCountries.length < 10)
+    {
+        return (
         <div>
-          Show details: {country.country.showDetails}
+          {listCountries.map((country) => {
+            let flagAddress = country.flags["png"];
+            let iconAddress = country.icon;
+            if(country.showDetails)
+            {
+              retrieveWeather(country);
+              return (
+                <div className="country-stats" key = {country.id}>
+                  <div>
+                    <h3>{country.name.common}</h3  >
+                    <ToggleDetailsButton id={country.id} searchForCountry = {countries.searchForCountry} text = "Hide Details"/>
+                  <div>
+                  </div>
+                    Capital: {country.capital}
+                  </div>
+                  <div>
+                    Region: {country.region}
+                  </div>
+                  <div>
+                    Population: {country.population}
+                  </div>
+                  <div>
+                    Surface area: {country.area}
+                  </div>
+                  <div>
+                    <Languages languages={country.languages} />
+                  </div>
+                  <div>
+                    <FlagImage flagAddress = {flagAddress}/>
+                  </div>
+                  <div className= "temperature">
+                    Temperature: {country.temp} ºC
+                    <WeatherIcon weatherIcon = {iconAddress} />
+                  </div>
+                </div> )
+            
+            }
+            return (
+              <div key = {country.id}>
+                {country.name.common}<ToggleDetailsButton id={country.id} searchForCountry = {countries.searchForCountry} text = "Show Details"/>
+              </div>
+            )}
+          )} 
         </div>
-        <div>
-          Capital: {country.country.capital}
-        </div>
-        <div>
-          Region: {country.country.region}
-        </div>
-        <div>
-          Population: {country.country.population}
-        </div>
-        <div>
-          Surface area: {country.country.area}
-        </div>
-        <div>
-          <Languages languages={languages} />
-        </div>
-        <div>
-          Flag: {flag}
-        </div>
-      </div> )
+      )
     }
     else
     {
-      console.log("Note showing details on ",country)
       return (
-        <div></div>
+        <div>Too many countries to list</div>
       )
-    } 
-  }
-  
-  const toggleShowDetails = (event) => {
-
-    console.log("show details button click2 ",event.target.attributes.country.value)
-    for(let i = 0; i < countryDetailsArray.length; i++)
-    {
-      if(countryDetailsArray[i].name.common ==event.target.attributes.country.value )
-      {
-        console.log("found country in country details array");
-        console.log("country");
-        if(countryDetailsArray[i].showDetails=="false")
-        {
-          countryDetailsArray[i].showDetails = "true";
-          console.log("country",countryDetailsArray[i]);
-
-        }
-        else
-        {
-
-          countryDetailsArray[i].showDetails = "false";
-          console.log("country",countryDetailsArray[i]);
-
-        }
-      }
-    }
-  }
-
-  const ShowDetailsButton = ({country},showdetails,onClick) => {
-//    console.log("Show details button",country);
-//    console.log("details on: "+showdetails)
-    return (
-        <button onClick={toggleShowDetails} country={country} showdetails = {showdetails}>Show Details</button>
-    )
-  } 
-
-  const ListOfCountries = (countries) => {
-   
-    let allCountries = countries.countries;
-    let someCountries = allCountries.filter((country)=>country.name.common.startsWith(searchForCountry))
-    countryDetailsArray = [];
-    if(someCountries.length>10)
-    {
-      return <div>Too many countries to list</div>
-    }
-    
-    else if(someCountries.length===1)
-    {
-      console.log("one country found",someCountries[0].name.common)
-      let oneCountry = someCountries[0];
-      oneCountry.showDetails = "true";
-      return (
-        <div className="country-stats-container">
-          <h3>{oneCountry.name.common}</h3>
-          <ShowDetails country = {oneCountry} />
-        </div>
-      )
-    }
-    else {
-      for(let i = 0; i < someCountries.length; i++)
-      {
-        countryDetailsArray.push(someCountries[i]);
-        countryDetailsArray[i].showDetails = "false";
-      }
-    console.log("Some Countries array",someCountries);
-    console.log("country details array ",countryDetailsArray)
-    return (
-      <div>
-        {/* {countryDetailsArray.map((country)=><div key ={country.name.common}> {country.name.common} <ShowDetails country={country} /> </div>)} */}
-        {countryDetailsArray.map((country)=><div key ={country.name.common}> {country.name.common} <ShowDetailsButton country={country.name.common} showdetails = {country.showDetails} onClick={toggleShowDetails}/><ShowDetails country={country} /> </div>)}
-      </div>
-    )
     }
   }
   const getCountriesHook = () => {
-    CountriesService
-      .getAll()
-      .then(countriesResponse => {
-        setCountries(countriesResponse);
-      })
-      .catch(error => {
-        console.log('failed at getting data from backend')
-      })
+    
+      if(!loadedCountries)
+      {        
+        CountriesService
+          .getAll()
+          .then(countriesResponse => {
+            setCountries(countriesResponse);
+            addShowDetails(countriesResponse);
+            setLoadedCountries(true);
+          })
+          .catch(error => {
+            console.log('failed at getting data from backend'+error)
+          });
+      }
+
   };
-  useEffect(getCountriesHook, []);
   
-  const handleSearchForChange = (event) => {
-      setSearchForCountry(event.target.value);
-  }
+  useEffect(getCountriesHook, []);
+
   return (
     <div className="App">
-      <div className="List of countries">
+      <div>
+        <button onClick={clearCountries}>Clear Countries</button>
+      </div>
+      <div className="list-of-countries">
         <h3>Countries</h3>
-        <ListOfCountries countries = {countries} searchForCountry = {searchForCountry} />
-        <FindCountriesForm countries = {countries} handleSearchForChange={handleSearchForChange} searchForCountry = {searchForCountry} />
+        <FindCountriesForm countries = {countries} handleSearchForChange={handleSearchForChange} setSearchForCountry = {setSearchForCountry} searchForCountry = {searchForCountry} />
+        <ListOfCountries countries = {countries} searchForCountry = {searchForCountry}/>
       </div>
     </div>
   );
-}
+} 
 
 export default App;
